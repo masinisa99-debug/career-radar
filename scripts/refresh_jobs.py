@@ -8,9 +8,10 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 FEED=ROOT/"feed/jobs.json"
-BOARDS=[("ashby","perk","Perk"),("ashby","lexroom","Lexroom"),("ashby","fonio","fonio"),("ashby","pillar-srl","Pillar"),("greenhouse","scalapaysrl","Scalapay")]
+BOARDS=[("ashby","perk","Perk"),("ashby","lexroom","Lexroom"),("ashby","fonio","fonio"),("ashby","pillar-srl","Pillar"),("greenhouse","scalapaysrl","Scalapay"),("ashby","deliveroo","Deliveroo"),("ashby","amenitiz","Amenitiz"),("ashby","ynteq","Ynteq"),("greenhouse","awin","Awin")]
 ROLE=re.compile(r"account.?manager|account.?executive|customer.?success|onboarding|partner(ship)?|sponsorship|commercial.?operations|business.?development|sales.?operations|events?|activation|project.?manager|merchant.?success",re.I)
-EXCLUDE=re.compile(r"\b(sdr|bdr|intern|internship|stage|stagista|director|vice president|head of|principal|staff|senior manager)\b",re.I)
+EXCLUDE=re.compile(r"\b(sdr|bdr|intern|internship|stage|stagista|director|vice president|head of|principal|staff|senior manager|team manager|lead)\b",re.I)
+OTHER_LANGUAGE=re.compile(r"\b(german|dutch|french|spanish|portuguese|swedish|danish|norwegian|finnish|polish)\s*(speaking|speaker|market|native|fluent|language)?\b|\b(uki|belgium|dach|benelux)\b",re.I)
 GEO=re.compile(r"italy|italia|milan|milano|monza|spain|españa|barcelona|madrid|valencia|sevilla|seville|málaga|malaga",re.I)
 SPANISH=re.compile(r"(?:fluent|native|professional|advanced|c1|c2|b2).{0,24}(?:spanish|español|castellano)|(?:spanish|español|castellano).{0,35}(?:mandatory|required|essential|fluent|native|c1|c2|b2|obligatorio|imprescindible)",re.I|re.S)
 ITALIAN=re.compile(r"italian|italiano|italiana|mercato italiano",re.I)
@@ -24,7 +25,7 @@ def city_country(location):
     if re.search("italy|italia",location,re.I):return "Italia remoto","Italia"
     return None,None
 def record(name,title,location,url,description,posted,source,identity):
-    if not ROLE.search(title) or EXCLUDE.search(title) or not GEO.search(location) or SPANISH.search(description):return None
+    if not ROLE.search(title) or EXCLUDE.search(title) or OTHER_LANGUAGE.search(title) or not GEO.search(location) or SPANISH.search(description):return None
     city,country=city_country(location)
     if not city or not url:return None
     it=bool(ITALIAN.search(title+" "+description))
