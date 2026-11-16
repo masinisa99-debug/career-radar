@@ -8,6 +8,7 @@ from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 FEED=ROOT/"feed/jobs.json"
+CURATED=ROOT/"feed/curated.json"
 BOARDS=[("ashby","perk","Perk"),("ashby","lexroom","Lexroom"),("ashby","fonio","fonio"),("ashby","pillar-srl","Pillar"),("greenhouse","scalapaysrl","Scalapay"),("ashby","deliveroo","Deliveroo"),("ashby","amenitiz","Amenitiz"),("ashby","ynteq","Ynteq"),("greenhouse","awin","Awin")]
 ROLE=re.compile(r"account.?manager|account.?executive|customer.?success|onboarding|partner(ship)?|sponsorship|commercial.?operations|business.?development|sales.?operations|events?|activation|project.?manager|merchant.?success",re.I)
 EXCLUDE=re.compile(r"\b(sdr|bdr|intern|internship|stage|stagista|director|vice president|head of|principal|staff|senior manager|team manager|lead)\b",re.I)
@@ -57,10 +58,18 @@ def main():
     if not successful:
         print("All sources failed; existing feed preserved.",errors)
         raise SystemExit(1)
+    if CURATED.exists():
+        try:
+            curated=json.loads(CURATED.read_text(encoding="utf-8"))
+            for item in curated.get("jobs",[]):
+                if item.get("url") and item.get("company") and item.get("title"):
+                    results.append(item)
+        except (ValueError, OSError) as exc:
+            errors.append("Curated: "+str(exc))
     seen=set();dedup=[]
     for item in results:
-        if item["url"] not in seen:
-            seen.add(item["url"]);dedup.append(item)
+        if item["url"].rstrip("/").split("?")[0].lower() not in seen:
+            seen.add(item["url"].rstrip("/").split("?")[0].lower());dedup.append(item)
     data={"updatedAt":dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),"jobs":dedup,"sources":[{"company":name,"source":kind+":"+slug} for kind,slug,name in BOARDS],"errors":errors,"disclaimer":"Solo alcune ATS pubbliche, non LinkedIn. Verificare sempre ogni annuncio."}
     FEED.parent.mkdir(exist_ok=True)
     FEED.write_text(json.dumps(data,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
